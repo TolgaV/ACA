@@ -16,13 +16,13 @@ void smooth(double sample[], double coeff[], double result[], int n)
 		norm+= coeff[i]>0 ? coeff[i] : -coeff[i];
 
 	for (i=0; i<n; i++) 
-  {
-		if (i==0 || i==n-1) 
-    {
+	{
+		if (i==0 || i==n-1)
+		{
 			result[i] = sample[i];
 		}
-    else 
-    {
+    		else 
+    		{
 			result[i]=0.0;
 			for (j=0; j<N_COEFFS; j++)
 				result[i] += sample[i-1+j]*coeff[j];
