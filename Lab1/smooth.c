@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+/* Optimize the code, then conver it to MIPS64 Instruction Set */
 #define N_SAMPLES	5
 #define N_COEFFS	3
 
