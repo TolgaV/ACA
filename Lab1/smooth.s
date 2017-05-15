@@ -52,47 +52,56 @@ coeffT:															; coeff[0] > 0, so : norm += coeff[0] => norm = coeff[0]
 				daddi	$t3, $t3, 1								; NORMLOOP t3 = t3 + 1;
 				j		normer
 				nop
+				
+				
+				
 setresult:		
 				l.d 	F2, INV($zero)
 				div.d	F1,	F2, F1 								; F1 = 1 / norm
-				l.d		F3, sample($zero)						; load sample[0] to F2
-				and		$t5, $t5, $zero							; reset register to zero, to be used as loop counter i
+				l.d		F3, sample($zero)						; load sample[0] to F3
+				and		$t5, $t5, $zero							; reset register to zero, to be used as index
 				s.d		F3, result($zero)						; store result[0] = sample[0]
 				l.d		F4, coeff($zero)						; coeff[0]
 				l.d		F5, coeff+8($zero)						; coeff[1]
 				l.d		F6, coeff+16($zero)						; coeff[2]
-				andi	$t2, $t2, 0								; Loop Counter
+				and		$t2, $t2, $zero							; Loop Counter
+				and		$t6, $zero, $zero						; to use as result index
+				or		$t8, $zero, $t0		;for reducing index
+				daddi	$t8, $t8, -1		;for reducing index
 forloop:
-				l.d		F10, sample($t5)						; F10 = sample[i-1]
+				l.d		F10, sample($t5)						; F10 = sample[i-1]	in this case sample[i-1] starts with sample[0]
 				nop												; to avoid Load Use Hazard
 				mul.d	F7, F10, F4								; temp1 = sample[i-1] * coeff[0]
-				daddi	$t5, $t5, 8
-				l.d		F11, sample($t5)						; F10 = sample[i]
+				;daddi	$t5, $t5, 8
+				l.d		F11, sample+8($t5)						; F10 = sample[i]
 				nop
 				mul.d   F8, F11, F5								; temp2 = sample[i] * coeff[1]
-				daddi	$t5, $t5, 8
-				l.d		F12, sample($t5)						; F11 = sample[i+1]
+				;daddi	$t5, $t5, 8
+				l.d		F12, sample+16($t5)						; F11 = sample[i+1]
 				nop
 				mul.d	F9, F12, F6								; temp3 = sample[i+1] * coeff[2]
 				add.d	F13, F7, F8								; temp = temp1 + temp2
-				nop
+				daddi	$t5, $t5, 8
+				;;;Alles Gut Until Hier;;;
 				daddi	$t2, $t2, 1									; Loop Counter
 				add.d 	F13, F13, F9							; temp = temp + temp3
 				lw		$t7, N_SAMPLES($zero)					; FOR LOOP n-1
-				and		$t6, $zero, $zero						; to use as result index
-				mul.d	F13, F13, F1							; temp = temp * 1 / norm
-				; $t0 contains N_SAMPLES
-				daddi	$t6, $t6, 8
-				;daddi	$t7, $t7, -1
 				nop
-				s.d		F13, result($t6)						; result[i] = temp[i]
-				bne		$t2, $t0, forloop
+				mul.d	F13, F13, F1							; temp = temp * 1 / norm
+				daddi	$t6, $t6, 8
+				nop
+				s.d		F13, result($t5)						; result[i] = temp[i]
+				;bne		$t2, $t0, forloop						; $t0 contains N_SAMPLES
+				bne		$t2, $t8, forloop	;for reducing index
 				
-				daddi 	$t6, $t6, 8
+				
+				;daddi 	$t6, $t6, 8
 				l.d		F14, sample($t6)
 				nop
 				s.d		F14, result($t6)
-				
+exit:
+				nop
+				halt
 				
 				;daddi	$t1, $zero, 1							; bitwise or to get as high
 				;ori		$t1, $t1, 1
@@ -109,4 +118,4 @@ forloop:
 
 				;mtc1	$t1, F11								; F11 = 1
 
-exit:
+;exit:
